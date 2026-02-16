@@ -38,7 +38,7 @@ export default function LoginPage() {
         <div style={{
             minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
         }}>
-            <div className="glass-card animate-fade-in-up" style={{ maxWidth: '420px', width: '100%', padding: '40px' }}>
+            <div className="glass-card animate-fade-in-up w-full max-w-[420px] p-6 md:p-10">
                 {/* Header */}
                 <div style={{ textAlign: 'center', marginBottom: '32px' }}>
                     <div style={{
@@ -125,6 +125,6 @@ export default function LoginPage() {
                     <Link href="/signup" style={{ color: '#2ecc71', fontWeight: 600, textDecoration: 'none' }}>Sign Up</Link>
                 </p>
             </div>
-        </div>
+        </div >
     );
 }

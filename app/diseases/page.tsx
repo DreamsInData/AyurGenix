@@ -70,7 +70,7 @@ export default function DiseasesPage() {
     };
 
     return (
-        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 24px' }}>
+        <div className="max-w-[800px] mx-auto py-8 px-4 md:p-10">
 
 
             <div style={{ textAlign: 'center', marginBottom: '40px' }}>

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser, DiseaseDetail } from '@/lib/context';
+import AuthGuard from '@/components/auth-guard';
 import {
     prakritiQuestions, symptomOptions, mentalHealthOptions,
     commonDiseases, severityOptions, durationOptions,
@@ -58,9 +59,11 @@ const ProgressBar = ({ step }: { step: number }) => (
                             <s.icon size={18} color={step >= s.id ? '#fff' : '#66bb6a'} />
                         )}
                     </div>
-                    <span style={{
-                        fontSize: '11px', fontWeight: step === s.id ? 600 : 400,
+                    <span className="text-[10px] sm:text-[11px]" style={{
+                        fontWeight: step === s.id ? 600 : 400,
                         color: step >= s.id ? '#2ecc71' : '#66bb6a',
+                        display: 'block', // Ensure it respects hidden class if added, but here we keep it mostly
+                        textAlign: 'center'
                     }}>{s.label}</span>
                 </div>
             ))}
@@ -288,68 +291,70 @@ export default function AssessPage() {
     // ============================
     if (step === 0) {
         return (
-            <div style={{ maxWidth: '650px', margin: '0 auto', padding: '40px 24px' }}>
-                <ProgressBar step={step} />
-                <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-                    <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.8rem', marginBottom: '8px' }}>
-                        <span className="gradient-text">Tell Us About Yourself</span>
-                    </h1>
-                    <p style={{ color: '#a5d6a7', fontSize: '14px' }}>This helps us personalize your Ayurvedic health plan</p>
-                </div>
+            <AuthGuard>
+                <div className="max-w-[650px] mx-auto py-8 px-4 md:p-10">
+                    <ProgressBar step={step} />
+                    <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+                        <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.8rem', marginBottom: '8px' }}>
+                            <span className="gradient-text">Tell Us About Yourself</span>
+                        </h1>
+                        <p style={{ color: '#a5d6a7', fontSize: '14px' }}>This helps us personalize your Ayurvedic health plan</p>
+                    </div>
 
-                <div className="glass-card" style={{ padding: '28px' }}>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
-                        <div style={{ gridColumn: '1 / -1' }}>
-                            <InputField label="Full Name" value={profile.name} onChange={v => setProfile(p => ({ ...p, name: v }))} placeholder="Your name" />
+                    <div className="glass-card" style={{ padding: '28px' }}>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+                            <div style={{ gridColumn: '1 / -1' }}>
+                                <InputField label="Full Name" value={profile.name} onChange={v => setProfile(p => ({ ...p, name: v }))} placeholder="Your name" />
+                            </div>
+                            <InputField label="Age" value={profile.age} onChange={v => setProfile(p => ({ ...p, age: v }))} type="number" placeholder="25" />
+                            <InputField label="Weight (kg)" value={profile.weight} onChange={v => setProfile(p => ({ ...p, weight: v }))} type="number" placeholder="65" />
+                            <InputField label="Height (cm)" value={profile.height} onChange={v => setProfile(p => ({ ...p, height: v }))} type="number" placeholder="170" />
+                            <InputField label="Sleep (hrs/night)" value={profile.sleepHours} onChange={v => setProfile(p => ({ ...p, sleepHours: Number(v) }))} type="number" placeholder="7" />
                         </div>
-                        <InputField label="Age" value={profile.age} onChange={v => setProfile(p => ({ ...p, age: v }))} type="number" placeholder="25" />
-                        <InputField label="Weight (kg)" value={profile.weight} onChange={v => setProfile(p => ({ ...p, weight: v }))} type="number" placeholder="65" />
-                        <InputField label="Height (cm)" value={profile.height} onChange={v => setProfile(p => ({ ...p, height: v }))} type="number" placeholder="170" />
-                        <InputField label="Sleep (hrs/night)" value={profile.sleepHours} onChange={v => setProfile(p => ({ ...p, sleepHours: Number(v) }))} type="number" placeholder="7" />
+
+                        <div style={{ marginBottom: '16px' }}>
+                            <label style={{ display: 'block', fontSize: '13px', color: '#a5d6a7', marginBottom: '8px', fontWeight: 500 }}>Gender</label>
+                            <SingleChipSelector options={['Male', 'Female', 'Other']} selected={profile.gender} onSelect={v => setProfile(p => ({ ...p, gender: v }))} />
+                        </div>
+
+                        <div style={{ marginBottom: '16px' }}>
+                            <label style={{ display: 'block', fontSize: '13px', color: '#a5d6a7', marginBottom: '8px', fontWeight: 500 }}>Activity Level</label>
+                            <SingleChipSelector options={activityLevelOptions} selected={profile.activityLevel}
+                                onSelect={v => setProfile(p => ({ ...p, activityLevel: v }))} color="#3498db" />
+                        </div>
+
+                        <div style={{ marginBottom: '16px' }}>
+                            <label style={{ display: 'block', fontSize: '13px', color: '#a5d6a7', marginBottom: '8px', fontWeight: 500 }}>Dietary Preference</label>
+                            <SingleChipSelector options={dietaryPreferenceOptions} selected={profile.dietaryPreference}
+                                onSelect={v => setProfile(p => ({ ...p, dietaryPreference: v }))} color="#f39c12" />
+                        </div>
+
+                        <div style={{ marginBottom: '16px' }}>
+                            <label style={{ display: 'block', fontSize: '13px', color: '#a5d6a7', marginBottom: '8px', fontWeight: 500 }}>Stress Level</label>
+                            <SingleChipSelector options={stressLevelOptions} selected={profile.stressLevel}
+                                onSelect={v => setProfile(p => ({ ...p, stressLevel: v }))} color="#e74c3c" />
+                        </div>
+
+                        <div style={{ marginBottom: '16px' }}>
+                            <label style={{ display: 'block', fontSize: '13px', color: '#a5d6a7', marginBottom: '8px', fontWeight: 500 }}>Eating Habits</label>
+                            <ChipSelector options={eatingHabitOptions}
+                                selected={profile.eatingHabits ? profile.eatingHabits.split(', ') : []}
+                                onToggle={v => {
+                                    const current = profile.eatingHabits ? profile.eatingHabits.split(', ') : [];
+                                    const updated = current.includes(v) ? current.filter(x => x !== v) : [...current, v];
+                                    setProfile(p => ({ ...p, eatingHabits: updated.join(', ') }));
+                                }}
+                                color="#9b59b6" />
+                        </div>
                     </div>
 
-                    <div style={{ marginBottom: '16px' }}>
-                        <label style={{ display: 'block', fontSize: '13px', color: '#a5d6a7', marginBottom: '8px', fontWeight: 500 }}>Gender</label>
-                        <SingleChipSelector options={['Male', 'Female', 'Other']} selected={profile.gender} onSelect={v => setProfile(p => ({ ...p, gender: v }))} />
-                    </div>
-
-                    <div style={{ marginBottom: '16px' }}>
-                        <label style={{ display: 'block', fontSize: '13px', color: '#a5d6a7', marginBottom: '8px', fontWeight: 500 }}>Activity Level</label>
-                        <SingleChipSelector options={activityLevelOptions} selected={profile.activityLevel}
-                            onSelect={v => setProfile(p => ({ ...p, activityLevel: v }))} color="#3498db" />
-                    </div>
-
-                    <div style={{ marginBottom: '16px' }}>
-                        <label style={{ display: 'block', fontSize: '13px', color: '#a5d6a7', marginBottom: '8px', fontWeight: 500 }}>Dietary Preference</label>
-                        <SingleChipSelector options={dietaryPreferenceOptions} selected={profile.dietaryPreference}
-                            onSelect={v => setProfile(p => ({ ...p, dietaryPreference: v }))} color="#f39c12" />
-                    </div>
-
-                    <div style={{ marginBottom: '16px' }}>
-                        <label style={{ display: 'block', fontSize: '13px', color: '#a5d6a7', marginBottom: '8px', fontWeight: 500 }}>Stress Level</label>
-                        <SingleChipSelector options={stressLevelOptions} selected={profile.stressLevel}
-                            onSelect={v => setProfile(p => ({ ...p, stressLevel: v }))} color="#e74c3c" />
-                    </div>
-
-                    <div style={{ marginBottom: '16px' }}>
-                        <label style={{ display: 'block', fontSize: '13px', color: '#a5d6a7', marginBottom: '8px', fontWeight: 500 }}>Eating Habits</label>
-                        <ChipSelector options={eatingHabitOptions}
-                            selected={profile.eatingHabits ? profile.eatingHabits.split(', ') : []}
-                            onToggle={v => {
-                                const current = profile.eatingHabits ? profile.eatingHabits.split(', ') : [];
-                                const updated = current.includes(v) ? current.filter(x => x !== v) : [...current, v];
-                                setProfile(p => ({ ...p, eatingHabits: updated.join(', ') }));
-                            }}
-                            color="#9b59b6" />
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
+                        <button onClick={handleNext} className="btn-primary" disabled={!canProceed()}>
+                            Next: Prakriti Quiz <ArrowRight size={14} />
+                        </button>
                     </div>
                 </div>
-
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
-                    <button onClick={handleNext} className="btn-primary" disabled={!canProceed()}>
-                        Next: Prakriti Quiz <ArrowRight size={14} />
-                    </button>
-                </div>
-            </div>
+            </AuthGuard>
         );
     }
 
@@ -361,7 +366,7 @@ export default function AssessPage() {
         const answeredCount = Object.keys(answers).length;
 
         return (
-            <div style={{ maxWidth: '650px', margin: '0 auto', padding: '40px 24px' }}>
+            <div className="max-w-[650px] mx-auto py-8 px-4 md:p-10">
                 <ProgressBar step={step} />
                 <div style={{ textAlign: 'center', marginBottom: '32px' }}>
                     <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.8rem', marginBottom: '8px' }}>
@@ -422,7 +427,7 @@ export default function AssessPage() {
     // ============================
     if (step === 2) {
         return (
-            <div style={{ maxWidth: '650px', margin: '0 auto', padding: '40px 24px' }}>
+            <div className="max-w-[650px] mx-auto py-8 px-4 md:p-10">
                 <ProgressBar step={step} />
                 <div style={{ textAlign: 'center', marginBottom: '32px' }}>
                     <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.8rem', marginBottom: '8px' }}>
@@ -468,7 +473,7 @@ export default function AssessPage() {
     // ============================
     if (step === 3) {
         return (
-            <div style={{ maxWidth: '650px', margin: '0 auto', padding: '40px 24px' }}>
+            <div className="max-w-[650px] mx-auto py-8 px-4 md:p-10">
                 <ProgressBar step={step} />
                 <div style={{ textAlign: 'center', marginBottom: '32px' }}>
                     <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.8rem', marginBottom: '8px' }}>
@@ -680,7 +685,7 @@ export default function AssessPage() {
     // STEP 4: AI ANALYSIS
     // ============================
     return (
-        <div style={{ maxWidth: '550px', margin: '0 auto', padding: '80px 24px', textAlign: 'center' }}>
+        <div className="max-w-[550px] mx-auto py-12 px-4 md:p-10 text-center">
             <ProgressBar step={step} />
 
             {loading ? (

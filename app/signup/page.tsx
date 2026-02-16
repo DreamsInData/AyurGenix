@@ -65,7 +65,7 @@ export default function SignupPage() {
         <div style={{
             minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
         }}>
-            <div className="glass-card animate-fade-in-up" style={{ maxWidth: '440px', width: '100%', padding: '40px' }}>
+            <div className="glass-card animate-fade-in-up w-full max-w-[440px] p-6 md:p-10">
                 {/* Header */}
                 <div style={{ textAlign: 'center', marginBottom: '28px' }}>
                     <div style={{
@@ -109,7 +109,7 @@ export default function SignupPage() {
 
                 <form onSubmit={handleSignUp}>
                     {/* Name Row */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3.5">
                         <div>
                             <label style={{ display: 'block', fontSize: '12px', color: '#66bb6a', marginBottom: '6px', fontWeight: 500 }}>First Name</label>
                             <div style={{ position: 'relative' }}>
