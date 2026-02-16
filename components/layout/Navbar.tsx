@@ -48,7 +48,7 @@ export default function Navbar() {
                 position: 'sticky', top: 0, zIndex: 100,
                 background: 'rgba(15, 26, 18, 0.85)',
                 backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-                backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+
                 borderBottom: '1px solid rgba(46, 204, 113, 0.1)',
             }} className="px-4 md:px-8">
                 <div style={{
@@ -93,7 +93,7 @@ export default function Navbar() {
             position: 'sticky', top: 0, zIndex: 100,
             background: 'rgba(15, 26, 18, 0.85)',
             backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-            backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+
             borderBottom: '1px solid rgba(46, 204, 113, 0.1)',
         }} className="px-4 md:px-8">
             <div style={{
