@@ -68,7 +68,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Prakriti + Vikriti Summary Row */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 {/* Prakriti Card */}
                 <div className="glass-card" style={{ padding: '24px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
@@ -146,7 +146,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Risk Assessment + Disease Summary */}
-            <div style={{ display: 'grid', gridTemplateColumns: risk && diseaseTreatments?.length ? '1fr 1fr' : '1fr', gap: '16px', marginBottom: '24px' }}>
+            <div className={`grid grid-cols-1 ${risk && diseaseTreatments?.length ? 'md:grid-cols-2' : ''} gap-4 mb-6`}>
                 {risk && (
                     <div className="glass-card" style={{ padding: '20px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
@@ -209,7 +209,7 @@ export default function DashboardPage() {
                     <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '0.95rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <Target size={18} color="#f39c12" /> Weekly Goals
                     </h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {goals.slice(0, 6).map((g, i) => (
                             <div key={i} style={{
                                 padding: '10px 14px', borderRadius: '10px',

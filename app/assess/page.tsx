@@ -298,7 +298,7 @@ export default function AssessPage() {
                 </div>
 
                 <div className="glass-card" style={{ padding: '28px' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
                         <div style={{ gridColumn: '1 / -1' }}>
                             <InputField label="Full Name" value={profile.name} onChange={v => setProfile(p => ({ ...p, name: v }))} placeholder="Your name" />
                         </div>

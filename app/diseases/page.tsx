@@ -189,7 +189,7 @@ export default function DiseasesPage() {
 
                     {/* Diet */}
                     {result.diet && typeof result.diet === 'object' && (
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                             <div className="glass-card" style={{ padding: '20px' }}>
                                 <h4 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '0.9rem', color: '#00e676', marginBottom: '10px' }}>✅ Eat</h4>
                                 {(result.diet.eat || []).map((f, i) => (
@@ -218,7 +218,7 @@ export default function DiseasesPage() {
                     )}
 
                     {/* Lifestyle & Yoga */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                         {Array.isArray(result.lifestyle) && (
                             <div className="glass-card" style={{ padding: '20px' }}>
                                 <h4 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '0.9rem', marginBottom: '10px' }}>🏡 Lifestyle</h4>
