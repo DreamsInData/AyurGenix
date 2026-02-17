@@ -39,7 +39,7 @@ export default function RoutinePage() {
     };
 
     return (
-        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '40px 24px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: 'clamp(20px, 4vw, 40px) clamp(16px, 3vw, 24px)' }}>
             <div style={{ textAlign: 'center', marginBottom: '40px' }}>
                 <div style={{
                     width: '64px', height: '64px', borderRadius: '18px',

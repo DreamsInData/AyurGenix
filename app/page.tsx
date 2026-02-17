@@ -27,7 +27,15 @@ export default function HomePage() {
   return (
     <div>
       {/* Hero Section */}
-      <section className="min-h-[calc(100vh-64px)] flex items-center justify-center py-12 px-4 md:px-6 relative overflow-hidden">
+      <section style={{
+        minHeight: 'calc(100vh - 64px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 'clamp(30px, 6vw, 60px) clamp(16px, 3vw, 24px)',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
         {/* Animated bg orbs */}
         <div style={{
           position: 'absolute', width: '500px', height: '500px', borderRadius: '50%',
@@ -88,7 +96,9 @@ export default function HomePage() {
           </div>
 
           {/* Stats */}
-          <div className="animate-fade-in-up stagger-4 flex justify-center gap-6 md:gap-12 mt-12 flex-wrap">
+          <div className="animate-fade-in-up stagger-4" style={{
+            display: 'flex', justifyContent: 'center', gap: 'clamp(20px, 4vw, 48px)', marginTop: 'clamp(30px, 5vw, 60px)', flexWrap: 'wrap',
+          }}>
             {[
               { value: '10+', label: 'Health Modules' },
               { value: 'AI', label: 'Powered Reports' },
@@ -105,13 +115,17 @@ export default function HomePage() {
       </section>
 
       {/* How It Works */}
-      <section className="py-16 px-4 md:px-8 max-w-7xl mx-auto">
+      <section style={{ padding: 'clamp(40px, 6vw, 80px) clamp(16px, 3vw, 24px)', maxWidth: '1200px', margin: '0 auto' }}>
         <div className="section-header">
           <h2 className="gradient-text">How It Works</h2>
           <p>Four simple steps to your personalized Ayurvedic health plan</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(240px, 100%), 1fr))',
+          gap: '24px',
+        }}>
           {steps.map((s, i) => (
             <div key={i} className="glass-card" style={{ padding: '32px 24px', textAlign: 'center', opacity: 0, animationDelay: `${i * 0.15}s` }}
               ref={(el) => {
@@ -140,13 +154,17 @@ export default function HomePage() {
       </section>
 
       {/* Features Grid */}
-      <section className="py-16 px-4 md:px-8 max-w-7xl mx-auto">
+      <section style={{ padding: 'clamp(40px, 6vw, 80px) clamp(16px, 3vw, 24px)', maxWidth: '1200px', margin: '0 auto' }}>
         <div className="section-header">
           <h2 className="gradient-text">Complete Health Modules</h2>
           <p>Every aspect of your wellness, powered by AI and Ayurveda</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))',
+          gap: '20px',
+        }}>
           {features.map((f, i) => (
             <Link key={i} href={f.href} className="glass-card" style={{
               padding: '28px 24px',
