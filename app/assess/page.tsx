@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import ProtectedRoute from '@/components/ProtectedRoute';
 import { useRouter } from 'next/navigation';
 import { useUser, DiseaseDetail } from '@/lib/context';
 import {
@@ -131,11 +132,11 @@ export default function AssessPage() {
         gender: userData.gender || '',
         weight: userData.weight || '',
         height: userData.height || '',
-        activityLevel: userData.activityLevel || 'moderate',
-        dietaryPreference: userData.dietaryPreference || 'vegetarian',
+        activityLevel: userData.activityLevel || '',
+        dietaryPreference: userData.dietaryPreference || '',
         eatingHabits: userData.eatingHabits || '',
         sleepHours: userData.sleepHours || 7,
-        stressLevel: userData.stressLevel || 'Moderate',
+        stressLevel: userData.stressLevel || '',
     });
 
     // Step 1: Prakriti
@@ -245,7 +246,7 @@ export default function AssessPage() {
             diseaseDetails: diseases,
             season: getSeason(),
             currentMedications: userData.currentMedications || '',
-        });
+        }, userData.language || 'en', userData.units || 'metric');
 
         if (res.success) {
             try {
@@ -680,75 +681,77 @@ export default function AssessPage() {
     // STEP 4: AI ANALYSIS
     // ============================
     return (
-        <div style={{ maxWidth: '550px', margin: '0 auto', padding: '80px 24px', textAlign: 'center' }}>
-            <ProgressBar step={step} />
+        <ProtectedRoute>
+            <div style={{ maxWidth: '550px', margin: '0 auto', padding: '80px 24px', textAlign: 'center' }}>
+                <ProgressBar step={step} />
 
-            {loading ? (
-                <div className="animate-fade-in-up">
-                    <div className="animate-pulse-glow" style={{
-                        width: '100px', height: '100px', borderRadius: '24px',
-                        background: 'linear-gradient(135deg, #2ecc71, #27ae60)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        margin: '0 auto 32px',
-                        boxShadow: '0 12px 40px rgba(46, 204, 113, 0.3)',
-                    }}>
-                        <Loader2 size={44} color="#fff" style={{ animation: 'spin-slow 2s linear infinite' }} />
+                {loading ? (
+                    <div className="animate-fade-in-up">
+                        <div className="animate-pulse-glow" style={{
+                            width: '100px', height: '100px', borderRadius: '24px',
+                            background: 'linear-gradient(135deg, #2ecc71, #27ae60)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            margin: '0 auto 32px',
+                            boxShadow: '0 12px 40px rgba(46, 204, 113, 0.3)',
+                        }}>
+                            <Loader2 size={44} color="#fff" style={{ animation: 'spin-slow 2s linear infinite' }} />
+                        </div>
+                        <h2 style={{ fontFamily: 'Outfit, sans-serif', fontSize: 'clamp(1.2rem, 3vw, 1.6rem)', marginBottom: '16px' }}>
+                            <span className="gradient-text">Analyzing Your Health Profile</span>
+                        </h2>
+                        <p style={{ color: '#a5d6a7', fontSize: '14px', lineHeight: 1.7, maxWidth: '400px', margin: '0 auto' }}>
+                            Our AI is examining your Prakriti, symptoms, and health conditions through the lens of classical Ayurveda to create your comprehensive health plan.
+                        </p>
+                        <div style={{ marginTop: '32px', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
+                            {['Analyzing Prakriti Constitution...', 'Evaluating Symptoms & Imbalances...', 'Generating Diet & Yoga Plans...', 'Creating Treatment Protocols...'].map((text, i) => (
+                                <div key={i} style={{
+                                    fontSize: '13px', color: '#66bb6a',
+                                    opacity: 0, animation: `fadeInUp 0.5s ease forwards ${i * 2}s`,
+                                }}>{text}</div>
+                            ))}
+                        </div>
                     </div>
-                    <h2 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.6rem', marginBottom: '16px' }}>
-                        <span className="gradient-text">Analyzing Your Health Profile</span>
-                    </h2>
-                    <p style={{ color: '#a5d6a7', fontSize: '14px', lineHeight: 1.7, maxWidth: '400px', margin: '0 auto' }}>
-                        Our AI is examining your Prakriti, symptoms, and health conditions through the lens of classical Ayurveda to create your comprehensive health plan.
-                    </p>
-                    <div style={{ marginTop: '32px', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
-                        {['Analyzing Prakriti Constitution...', 'Evaluating Symptoms & Imbalances...', 'Generating Diet & Yoga Plans...', 'Creating Treatment Protocols...'].map((text, i) => (
-                            <div key={i} style={{
-                                fontSize: '13px', color: '#66bb6a',
-                                opacity: 0, animation: `fadeInUp 0.5s ease forwards ${i * 2}s`,
-                            }}>{text}</div>
-                        ))}
+                ) : error ? (
+                    <div className="animate-fade-in-up">
+                        <div style={{
+                            width: '80px', height: '80px', borderRadius: '20px',
+                            background: 'rgba(255,82,82,0.1)', border: '1px solid rgba(255,82,82,0.2)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            margin: '0 auto 24px',
+                        }}>
+                            <AlertCircle size={36} color="#ff5252" />
+                        </div>
+                        <h2 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.4rem', marginBottom: '12px', color: '#ff5252' }}>
+                            Analysis Failed
+                        </h2>
+                        <p style={{ fontSize: '14px', color: '#a5d6a7', marginBottom: '24px' }}>{error}</p>
+                        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                            <button onClick={() => setStep(3)} className="btn-ghost">
+                                <ArrowLeft size={14} /> Go Back
+                            </button>
+                            <button onClick={runAnalysis} className="btn-primary">
+                                <Sparkles size={14} /> Retry Analysis
+                            </button>
+                        </div>
                     </div>
-                </div>
-            ) : error ? (
-                <div className="animate-fade-in-up">
-                    <div style={{
-                        width: '80px', height: '80px', borderRadius: '20px',
-                        background: 'rgba(255,82,82,0.1)', border: '1px solid rgba(255,82,82,0.2)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        margin: '0 auto 24px',
-                    }}>
-                        <AlertCircle size={36} color="#ff5252" />
+                ) : (
+                    <div className="animate-fade-in-up">
+                        <div style={{
+                            width: '80px', height: '80px', borderRadius: '20px',
+                            background: 'linear-gradient(135deg, #00e676, #2ecc71)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            margin: '0 auto 24px',
+                            boxShadow: '0 12px 40px rgba(0, 230, 118, 0.3)',
+                        }}>
+                            <CheckCircle size={40} color="#fff" />
+                        </div>
+                        <h2 style={{ fontFamily: 'Outfit, sans-serif', fontSize: 'clamp(1.2rem, 3vw, 1.6rem)', marginBottom: '12px' }}>
+                            <span className="gradient-text">Analysis Complete!</span>
+                        </h2>
+                        <p style={{ color: '#a5d6a7', fontSize: '14px' }}>Redirecting to your dashboard...</p>
                     </div>
-                    <h2 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.4rem', marginBottom: '12px', color: '#ff5252' }}>
-                        Analysis Failed
-                    </h2>
-                    <p style={{ fontSize: '14px', color: '#a5d6a7', marginBottom: '24px' }}>{error}</p>
-                    <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                        <button onClick={() => setStep(3)} className="btn-ghost">
-                            <ArrowLeft size={14} /> Go Back
-                        </button>
-                        <button onClick={runAnalysis} className="btn-primary">
-                            <Sparkles size={14} /> Retry Analysis
-                        </button>
-                    </div>
-                </div>
-            ) : (
-                <div className="animate-fade-in-up">
-                    <div style={{
-                        width: '80px', height: '80px', borderRadius: '20px',
-                        background: 'linear-gradient(135deg, #00e676, #2ecc71)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        margin: '0 auto 24px',
-                        boxShadow: '0 12px 40px rgba(0, 230, 118, 0.3)',
-                    }}>
-                        <CheckCircle size={40} color="#fff" />
-                    </div>
-                    <h2 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.6rem', marginBottom: '12px' }}>
-                        <span className="gradient-text">Analysis Complete!</span>
-                    </h2>
-                    <p style={{ color: '#a5d6a7', fontSize: '14px' }}>Redirecting to your dashboard...</p>
-                </div>
-            )}
-        </div>
+                )}
+            </div>
+        </ProtectedRoute>
     );
 }

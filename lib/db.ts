@@ -119,7 +119,7 @@ export async function loadChatHistory(userId: string) {
         .from('chat_history')
         .select('messages')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
     if (error || !data) return [];
     return (data.messages as { role: 'user' | 'assistant'; content: string }[]) || [];

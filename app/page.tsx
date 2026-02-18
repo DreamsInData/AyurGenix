@@ -72,7 +72,7 @@ export default function HomePage() {
           </h1>
 
           <p className="animate-fade-in-up stagger-2" style={{
-            fontSize: '1.15rem',
+            fontSize: 'clamp(0.95rem, 2vw, 1.15rem)',
             color: '#a5d6a7',
             maxWidth: '640px',
             margin: '0 auto 40px',
@@ -84,12 +84,12 @@ export default function HomePage() {
           </p>
 
           <div className="animate-fade-in-up stagger-3" style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link href="/prakriti" className="btn-primary" style={{ fontSize: '16px', padding: '14px 32px' }}>
+            <Link href="/prakriti" className="btn-primary" style={{ fontSize: 'clamp(14px, 2vw, 16px)', padding: 'clamp(10px, 2vw, 14px) clamp(20px, 4vw, 32px)' }}>
               <Brain size={18} />
               Start Prakriti Quiz
               <ArrowRight size={16} />
             </Link>
-            <Link href="/chat" className="btn-secondary" style={{ fontSize: '16px', padding: '14px 32px' }}>
+            <Link href="/chat" className="btn-secondary" style={{ fontSize: 'clamp(14px, 2vw, 16px)', padding: 'clamp(10px, 2vw, 14px) clamp(20px, 4vw, 32px)' }}>
               <MessageCircle size={18} />
               Chat with AI
             </Link>
@@ -106,7 +106,7 @@ export default function HomePage() {
               { value: '24/7', label: 'AI Available' },
             ].map((s, i) => (
               <div key={i} style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '2rem', fontWeight: 800, fontFamily: 'Outfit, sans-serif', color: '#2ecc71' }}>{s.value}</div>
+                <div style={{ fontSize: 'clamp(1.4rem, 4vw, 2rem)', fontWeight: 800, fontFamily: 'Outfit, sans-serif', color: '#2ecc71' }}>{s.value}</div>
                 <div style={{ fontSize: '13px', color: '#66bb6a', marginTop: '4px' }}>{s.label}</div>
               </div>
             ))}

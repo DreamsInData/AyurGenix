@@ -28,6 +28,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setSession(s);
             setUser(s?.user ?? null);
             setLoading(false);
+        }).catch(() => {
+            // Stale/expired session — clear it silently
+            setSession(null);
+            setUser(null);
+            setLoading(false);
         });
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {

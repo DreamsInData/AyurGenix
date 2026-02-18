@@ -38,7 +38,7 @@ export default function LoginPage() {
         <div style={{
             minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
         }}>
-            <div className="glass-card animate-fade-in-up" style={{ maxWidth: '420px', width: '100%', padding: '40px' }}>
+            <div className="glass-card animate-fade-in-up" style={{ maxWidth: '420px', width: '100%', padding: 'clamp(24px, 5vw, 40px)' }}>
                 {/* Header */}
                 <div style={{ textAlign: 'center', marginBottom: '32px' }}>
                     <div style={{
@@ -49,7 +49,7 @@ export default function LoginPage() {
                     }}>
                         <LogIn size={28} color="#fff" />
                     </div>
-                    <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.6rem', marginBottom: '6px' }}>
+                    <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: 'clamp(1.2rem, 3vw, 1.6rem)', marginBottom: '6px' }}>
                         <span className="gradient-text">Welcome Back</span>
                     </h1>
                     <p style={{ color: '#66bb6a', fontSize: '14px' }}>Sign in to your AyurGenix account</p>

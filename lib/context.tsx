@@ -31,6 +31,12 @@ export interface UserData {
     completeReport: string | null;
     chatHistory: { role: 'user' | 'assistant'; content: string }[];
     language: string;
+    units: 'metric' | 'imperial';
+    notifications: {
+        dailyTips: boolean;
+        medicationReminders: boolean;
+        waterReminders: boolean;
+    };
     prakritiResult: string | null;
     vikritiResult: string | null;
     healthReport: string | null;
@@ -38,12 +44,14 @@ export interface UserData {
 
 const defaultUserData: UserData = {
     name: '', age: 0, gender: '', weight: 0, height: 0,
-    activityLevel: 'moderate', dietaryPreference: 'vegetarian',
-    eatingHabits: '', sleepHours: 7, stressLevel: 'moderate',
+    activityLevel: '', dietaryPreference: '',
+    eatingHabits: '', sleepHours: 7, stressLevel: '',
     existingConditions: [], currentMedications: '',
     prakritiAnswers: {}, symptoms: [], mentalHealth: [],
     diseaseDetails: [], completeReport: null,
     chatHistory: [], language: 'en',
+    units: 'metric',
+    notifications: { dailyTips: true, medicationReminders: true, waterReminders: true },
     prakritiResult: null, vikritiResult: null, healthReport: null,
 };
 

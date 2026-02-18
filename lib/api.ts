@@ -1,30 +1,74 @@
 // ========================================
-// AyurGenix – OpenRouter LLM API Integration
+// AyurGenix – Google Gemini API Integration
+// with Google Search Grounding (RAG)
 // ========================================
 
-const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 function getApiKey(): string {
-  return process.env.NEXT_PUBLIC_OPENROUTER_API_KEY || '';
+  return process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
 }
 
 function getModel(): string {
-  return process.env.NEXT_PUBLIC_OPENROUTER_MODEL || 'google/gemini-2.0-flash-001';
+  return process.env.NEXT_PUBLIC_GEMINI_MODEL || 'gemini-2.0-flash';
 }
 
-const SYSTEM_PROMPT = `You are AyurGenix AI — an expert Ayurvedic health advisor powered by classical Ayurvedic principles combined with modern nutrition science.
+// ── Enhanced System Prompt with Knowledge Sources ──────────
+const BASE_SYSTEM_PROMPT = `You are **AyurGenix AI** — a world-class Ayurvedic health advisor that combines classical Ayurvedic wisdom with evidence-based modern medical research.
 
-CORE RULES:
-1. You ALWAYS respond in structured JSON format when asked for reports.
-2. You provide personalized Ayurvedic guidance based on the user's Prakriti (constitution), Vikriti (current imbalance), symptoms, BMI, season, and lifestyle.
-3. You blend classical Ayurveda (Charaka Samhita, Sushruta Samhita) with modern nutrition science.
-4. For RED FLAG symptoms (chest pain, severe diabetes, sudden weight loss, high fever, breathing difficulty, blood in stool/urine, severe abdominal pain, fainting) — you ALWAYS recommend immediate medical consultation first.
-5. You include safety disclaimers: "This is educational guidance, not a substitute for professional medical advice."
-6. You provide stage-based escalation (Mild → Moderate → Severe) for health conditions.
-7. You are warm, supportive, and culturally respectful.
-8. All dietary recommendations MUST respect the user's dietary preference (vegetarian/non-vegetarian/vegan).
-9. If the user has a specific disease, provide DETAILED Ayurvedic treatment protocol for it.`;
+## YOUR KNOWLEDGE SOURCES (in priority order):
+1. **Classical Ayurvedic Texts**: Charaka Samhita, Sushruta Samhita, Ashtanga Hridaya, Bhavaprakasha Nighantu, Dravyaguna Vijnana, Sharangadhara Samhita.
+2. **Modern Research**: PubMed, NCBI, NIH, WHO monographs on medicinal plants, AYUSH Ministry guidelines, CCRAS (Central Council for Research in Ayurvedic Sciences) publications.
+3. **Pharmacopeias**: Ayurvedic Pharmacopoeia of India (API), Indian Pharmacopoeia, European Pharmacopoeia for herbal monographs.
 
+## CORE RULES:
+1. **Research Before Answering**: When uncertain about herb dosages, drug interactions, or disease protocols, USE GOOGLE SEARCH to find the latest authentic research. Never fabricate dosage amounts or safety data.
+2. Provide personalized Ayurvedic guidance based on Prakriti (constitution), Vikriti (current imbalance), symptoms, BMI, season (Ritucharya), and lifestyle.
+3. Blend classical Ayurveda with modern nutrition science and cite sources when possible.
+4. **RED FLAG PROTOCOL**: For chest pain, severe diabetes, sudden weight loss, high fever, breathing difficulty, blood in stool/urine, severe abdominal pain, fainting — ALWAYS recommend IMMEDIATE medical consultation first. Never treat these with herbs alone.
+5. Include safety disclaimer: "This is educational guidance, not a substitute for professional medical advice."
+6. Provide stage-based escalation (Mild → Moderate → Severe) for health conditions.
+7. Be warm, supportive, and culturally respectful.
+8. All dietary recommendations MUST respect dietary preference (vegetarian/non-vegetarian/vegan).
+9. For diseases, provide DETAILED Ayurvedic treatment protocols with Nidana (etiology), Samprapti (pathogenesis), Chikitsa (treatment), and Pathya-Apathya (do's and don'ts).
+10. **ACCURACY RULES**:
+    - Never invent herb names or Sanskrit terms that don't exist.
+    - Always provide standard dosage ranges from authentic pharmacopoeia.
+    - Mention potential contraindications and drug-herb interactions.
+    - Differentiate between well-researched herbs (Ashwagandha, Turmeric) and less-studied ones.
+    - When citing Ayurvedic formulations (Rasayanas, Churnas, Kashayams), provide their classical source text.`;
+
+function getLanguageInstruction(language: string): string {
+  if (language === 'hi') return '\n\nIMPORTANT: Respond ENTIRELY in Hindi (Devanagari script / हिंदी). All text content, descriptions, advice, tips, and explanations must be in Hindi. Keep JSON keys in English but all JSON string VALUES must be in Hindi.';
+  if (language === 'hinglish') return '\n\nIMPORTANT: Respond in Hinglish — a natural mix of Hindi words written in Roman/Latin script with English. For example: "Aapka Vata dosha bahut zyada hai, isliye aapko warm foods khane chahiye." Keep JSON keys in English but all JSON string VALUES must be in Hinglish.';
+  return '';
+}
+
+function getUnitInstruction(units: string): string {
+  if (units === 'imperial') return '\n\nIMPORTANT: The user prefers IMPERIAL units (lbs, feet/inches). You MUST convert all weight/height/volume recommendations to Imperial units in your output.';
+  return '';
+}
+
+// ── Mode-Specific Prompt Additions ──────────────────────
+const CHAT_MODE_INSTRUCTION = `
+
+RESPONSE FORMAT: Respond in natural conversational Markdown. Do NOT output JSON.
+- Use headers (##), bullet points, and bold text for readability.
+- When you search the web for information, briefly mention the source (e.g., "According to a study published in the Journal of Ayurveda...").
+- If you reference a classical text, mention it (e.g., "As described in Charaka Samhita, Chikitsa Sthana...").
+- Keep responses focused, practical, and actionable.
+- Use emojis sparingly for warmth (🌿, 🧘, 💧).
+- For herb recommendations, always include: name (Sanskrit + common), dosage, timing, and any precautions.`;
+
+const JSON_MODE_INSTRUCTION = `
+
+RESPONSE FORMAT: You MUST respond with a single valid JSON object. No markdown, no extra text outside JSON.
+- Cross-reference recommendations with classical Ayurvedic texts and modern research.
+- Ensure all herb dosages come from authenticated pharmacopoeia (Ayurvedic Pharmacopoeia of India).
+- Include evidence-based information when available.
+- Search for the latest research on any herbs or treatments you recommend.`;
+
+// ── Interfaces ──────────────────────────────────────────
 export interface LLMMessage {
   role: 'system' | 'user' | 'assistant';
   content: string;
@@ -36,47 +80,71 @@ export interface LLMResponse {
   error?: string;
 }
 
+// ── Core LLM Call with Google Search Grounding ──────────
 export async function callLLM(
   messages: LLMMessage[],
-  maxTokens: number = 4096
+  maxTokens: number = 4096,
+  language: string = 'en',
+  units: string = 'metric',
+  jsonMode: boolean = false
 ): Promise<LLMResponse> {
   const apiKey = getApiKey();
-  const model = getModel();
+  const modelName = getModel();
 
   if (!apiKey) {
-    return { success: false, content: '', error: 'API key not configured. Please set NEXT_PUBLIC_OPENROUTER_API_KEY in your .env file.' };
+    return { success: false, content: '', error: 'API key not configured. Please set NEXT_PUBLIC_GEMINI_API_KEY in your .env file.' };
   }
 
   try {
-    const response = await fetch(OPENROUTER_API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://ayurgenix.vercel.app',
-        'X-Title': 'AyurGenix AI',
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          ...messages,
-        ],
-        temperature: 0.7,
-        max_tokens: maxTokens,
-      }),
-    });
+    const genAI = new GoogleGenerativeAI(apiKey);
 
-    if (!response.ok) {
-      const errorData = await response.text();
-      return { success: false, content: '', error: `API Error (${response.status}): ${errorData}` };
+    // Build system instruction with mode-specific additions
+    const systemInstruction = BASE_SYSTEM_PROMPT
+      + getLanguageInstruction(language)
+      + getUnitInstruction(units)
+      + (jsonMode ? JSON_MODE_INSTRUCTION : CHAT_MODE_INSTRUCTION);
+
+    // Initialize Model config
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const modelConfig: any = {
+      model: modelName,
+      systemInstruction: systemInstruction,
+      generationConfig: {
+        responseMimeType: jsonMode ? "application/json" : "text/plain",
+      },
+    };
+
+    // ✨ Google Search Grounding (RAG) — only for Chat mode
+    // Grounding conflicts with strict JSON output, so we disable it for JSON mode
+    if (!jsonMode) {
+      modelConfig.tools = [{ googleSearch: {} }];
     }
 
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || '';
-    return { success: true, content };
+    const model = genAI.getGenerativeModel(modelConfig);
+
+    // Transform messages for Gemini format (user/model roles)
+    const history = messages
+      .filter(m => m.role !== 'system')
+      .map(m => ({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.content }],
+      }));
+
+    const result = await model.generateContent({
+      contents: history,
+      generationConfig: {
+        maxOutputTokens: maxTokens,
+        temperature: 0.7,
+      },
+    });
+
+    const response = await result.response;
+    const text = response.text();
+
+    return { success: true, content: text };
   } catch (error) {
-    return { success: false, content: '', error: `Network error: ${(error as Error).message}` };
+    console.error("Gemini API Error:", error);
+    return { success: false, content: '', error: `Gemini API Error: ${(error as Error).message}` };
   }
 }
 
@@ -108,7 +176,7 @@ export interface IntakeData {
   currentMedications: string;
 }
 
-export async function generateCompleteReport(data: IntakeData): Promise<LLMResponse> {
+export async function generateCompleteReport(data: IntakeData, language: string = 'en', units: string = 'metric'): Promise<LLMResponse> {
   const diseaseBlock = data.diseaseDetails.length > 0
     ? `\nDISEASES/CONDITIONS:\n${data.diseaseDetails.map(d =>
       `- ${d.name} (Since: ${d.since}, Severity: ${d.severity})\n  Current symptoms: ${d.currentSymptoms.join(', ')}`
@@ -120,6 +188,7 @@ export async function generateCompleteReport(data: IntakeData): Promise<LLMRespo
     : '\nMENTAL HEALTH: No concerns reported';
 
   const prompt = `Generate a COMPLETE personalized Ayurvedic health report based on ALL the data below.
+IMPORTANT: Search online for the latest authentic Ayurvedic research, herb-drug interactions, and evidence-based dosages relevant to this user's conditions before generating the report.
 
 USER PROFILE:
 - Name: ${data.name}
@@ -140,7 +209,9 @@ PHYSICAL SYMPTOMS: ${data.symptoms.length > 0 ? data.symptoms.join(', ') : 'None
 ${mentalBlock}
 ${diseaseBlock}
 
-You MUST respond with a single JSON object in this EXACT format (no markdown, no extra text):
+You MUST respond with a single JSON object in this EXACT format (no markdown, no extra text).
+All herb dosages MUST come from authentic sources (Ayurvedic Pharmacopoeia of India, CCRAS guidelines, or peer-reviewed research).
+Include contraindications for any herbs if the user is on medications.
 {
   "prakriti_analysis": {
     "vata_percentage": <number>,
@@ -168,14 +239,14 @@ You MUST respond with a single JSON object in this EXACT format (no markdown, no
     {
       "disease": "<name>",
       "dosha_root_cause": "<explanation>",
-      "ayurvedic_treatment": "<detailed treatment protocol>",
+      "ayurvedic_treatment": "<detailed treatment protocol with classical reference>",
       "stages": [
         {"level": "Mild", "symptoms": ["<s>"], "advice": "<what to do>"},
         {"level": "Moderate", "symptoms": ["<s>"], "advice": "<what to do>"},
         {"level": "Severe", "symptoms": ["<s>"], "advice": "<what to do — include medical referral>"}
       ],
       "specific_diet": {"eat": ["<food>"], "avoid": ["<food>"]},
-      "specific_herbs": [{"name": "<herb>", "usage": "<how>", "dosage": "<amount>"}],
+      "specific_herbs": [{"name": "<herb>", "usage": "<how>", "dosage": "<amount from pharmacopoeia>"}],
       "specific_yoga": ["<pose or practice>"],
       "specific_lifestyle": ["<recommendation>"],
       "recovery_timeline": "<expected timeline with proper adherence>"
@@ -215,7 +286,7 @@ You MUST respond with a single JSON object in this EXACT format (no markdown, no
     "things_to_avoid": ["<avoid>"]
   },
   "herb_recommendations": [
-    {"name": "<herb>", "benefit": "<why>", "dosage": "<how much>", "when_to_take": "<timing>", "precaution": "<warning>"}
+    {"name": "<herb (Sanskrit + English)>", "benefit": "<why>", "dosage": "<from pharmacopoeia>", "when_to_take": "<timing>", "precaution": "<warning + contraindications>"}
   ],
   "mental_health_plan": {
     "assessment": "<overview of mental state>",
@@ -234,49 +305,61 @@ You MUST respond with a single JSON object in this EXACT format (no markdown, no
   ]
 }`;
 
-  return callLLM([{ role: 'user', content: prompt }], 8192);
+  return callLLM([{ role: 'user', content: prompt }], 8192, language, units, true);
 }
 
-// ---- Chat with AI ----
+// ── Chat with AI ────────────────────────────────────────
 export async function chatWithAI(
   conversationHistory: LLMMessage[],
   userMessage: string,
-  userContext: string
+  userContext: string,
+  language: string = 'en',
+  units: string = 'metric'
 ): Promise<LLMResponse> {
   const contextPrompt = userContext
     ? `[User Context: ${userContext}]\n\n${userMessage}`
     : userMessage;
 
   return callLLM(
-    [...conversationHistory, { role: 'user', content: contextPrompt }]
+    [...conversationHistory, { role: 'user', content: contextPrompt }],
+    4096,
+    language,
+    units
   );
 }
 
-// ---- Disease-specific advice (standalone, for Disease Library) ----
+// ── Disease-specific advice (for Disease Library) ───────
 export async function getDiseaseAdvice(
   disease: string,
   prakriti: string,
-  userInfo: { age: number; gender: string }
+  userInfo: { age: number; gender: string },
+  language: string = 'en',
+  units: string = 'metric'
 ): Promise<LLMResponse> {
   const prompt = `Provide detailed Ayurvedic guidance for managing "${disease}".
+IMPORTANT: Search online for the latest authentic Ayurvedic research, clinical studies, and evidence-based protocols for this disease before generating guidance.
 
 USER: Age ${userInfo.age}, Gender: ${userInfo.gender}, Prakriti: ${prakriti}
 
-Respond in this exact JSON format:
+Respond in this exact JSON format. All herb dosages must come from authenticated sources:
 {
   "disease": "${disease}",
-  "dosha_root_cause": "<explanation>",
+  "dosha_root_cause": "<explanation with classical reference>",
+  "nidana": "<etiology from classical texts>",
+  "samprapti": "<pathogenesis explanation>",
   "stages": [
     {"level": "Mild", "symptoms": ["<s1>"], "advice": "<what to do>"},
     {"level": "Moderate", "symptoms": ["<s1>"], "advice": "<what to do>"},
     {"level": "Severe", "symptoms": ["<s1>"], "advice": "<what to do — include medical referral>"}
   ],
   "diet": {"eat": ["<food1>"], "avoid": ["<food1>"]},
-  "herbs": [{"name": "<herb>", "usage": "<how>", "dosage": "<amount>"}],
+  "herbs": [{"name": "<herb (Sanskrit + English)>", "usage": "<how>", "dosage": "<from pharmacopoeia>", "contraindications": "<warnings>"}],
+  "formulations": [{"name": "<classical formulation>", "source_text": "<which text>", "usage": "<how to use>"}],
   "lifestyle": ["<recommendation1>"],
   "yoga": ["<pose or practice>"],
+  "modern_research": "<brief summary of any relevant modern studies>",
   "disclaimer": "Consult a healthcare professional for persistent or severe symptoms."
 }`;
 
-  return callLLM([{ role: 'user', content: prompt }]);
+  return callLLM([{ role: 'user', content: prompt }], 8192, language, units, true);
 }

@@ -65,7 +65,7 @@ export default function SignupPage() {
         <div style={{
             minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
         }}>
-            <div className="glass-card animate-fade-in-up" style={{ maxWidth: '440px', width: '100%', padding: '40px' }}>
+            <div className="glass-card animate-fade-in-up" style={{ maxWidth: '440px', width: '100%', padding: 'clamp(24px, 5vw, 40px)' }}>
                 {/* Header */}
                 <div style={{ textAlign: 'center', marginBottom: '28px' }}>
                     <div style={{
@@ -76,7 +76,7 @@ export default function SignupPage() {
                     }}>
                         <UserPlus size={28} color="#fff" />
                     </div>
-                    <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.6rem', marginBottom: '6px' }}>
+                    <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: 'clamp(1.2rem, 3vw, 1.6rem)', marginBottom: '6px' }}>
                         <span className="gradient-text">Create Account</span>
                     </h1>
                     <p style={{ color: '#66bb6a', fontSize: '14px' }}>Start your Ayurvedic health journey</p>
