@@ -1,17 +1,4 @@
-// ========================================
-// AyurGenix – Google Gemini API Integration
-// with Google Search Grounding (RAG)
-// ========================================
-
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-function getApiKey(): string {
-  return process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
-}
-
-function getModel(): string {
-  return process.env.NEXT_PUBLIC_GEMINI_MODEL || 'gemini-2.0-flash';
-}
+import { generateGeminiContent } from "@/app/actions";
 
 // ── Enhanced System Prompt with Knowledge Sources ──────────
 const BASE_SYSTEM_PROMPT = `You are **AyurGenix AI** — a world-class Ayurvedic health advisor that combines classical Ayurvedic wisdom with evidence-based modern medical research.
@@ -80,7 +67,7 @@ export interface LLMResponse {
   error?: string;
 }
 
-// ── Core LLM Call with Google Search Grounding ──────────
+// ── Core LLM Call with Server Action ──────────
 export async function callLLM(
   messages: LLMMessage[],
   maxTokens: number = 4096,
@@ -88,64 +75,34 @@ export async function callLLM(
   units: string = 'metric',
   jsonMode: boolean = false
 ): Promise<LLMResponse> {
-  const apiKey = getApiKey();
-  const modelName = getModel();
 
-  if (!apiKey) {
-    return { success: false, content: '', error: 'API key not configured. Please set NEXT_PUBLIC_GEMINI_API_KEY in your .env file.' };
-  }
+  // Build system instruction with mode-specific additions
+  const systemInstruction = BASE_SYSTEM_PROMPT
+    + getLanguageInstruction(language)
+    + getUnitInstruction(units)
+    + (jsonMode ? JSON_MODE_INSTRUCTION : CHAT_MODE_INSTRUCTION);
 
-  try {
-    const genAI = new GoogleGenerativeAI(apiKey);
+  // Model name can be hardcoded here or retrieved from action if needed, 
+  // currently we pass it, but server action also has default. 
+  // Passing 'gemini-2.0-flash' explicitly to be safe.
+  const modelName = 'gemini-2.0-flash';
 
-    // Build system instruction with mode-specific additions
-    const systemInstruction = BASE_SYSTEM_PROMPT
-      + getLanguageInstruction(language)
-      + getUnitInstruction(units)
-      + (jsonMode ? JSON_MODE_INSTRUCTION : CHAT_MODE_INSTRUCTION);
+  // Transform messages for Gemini format (user/model roles)
+  const history = messages
+    .filter(m => m.role !== 'system')
+    .map(m => ({
+      role: (m.role === 'assistant' ? 'model' : 'user') as 'user' | 'model',
+      parts: [{ text: m.content }],
+    }));
 
-    // Initialize Model config
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const modelConfig: any = {
-      model: modelName,
-      systemInstruction: systemInstruction,
-      generationConfig: {
-        responseMimeType: jsonMode ? "application/json" : "text/plain",
-      },
-    };
-
-    // ✨ Google Search Grounding (RAG) — only for Chat mode
-    // Grounding conflicts with strict JSON output, so we disable it for JSON mode
-    if (!jsonMode) {
-      modelConfig.tools = [{ googleSearch: {} }];
-    }
-
-    const model = genAI.getGenerativeModel(modelConfig);
-
-    // Transform messages for Gemini format (user/model roles)
-    const history = messages
-      .filter(m => m.role !== 'system')
-      .map(m => ({
-        role: m.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: m.content }],
-      }));
-
-    const result = await model.generateContent({
-      contents: history,
-      generationConfig: {
-        maxOutputTokens: maxTokens,
-        temperature: 0.7,
-      },
-    });
-
-    const response = await result.response;
-    const text = response.text();
-
-    return { success: true, content: text };
-  } catch (error) {
-    console.error("Gemini API Error:", error);
-    return { success: false, content: '', error: `Gemini API Error: ${(error as Error).message}` };
-  }
+  // Call Server Action
+  return await generateGeminiContent(
+    history,
+    systemInstruction,
+    modelName,
+    maxTokens,
+    jsonMode
+  );
 }
 
 // ========================================
